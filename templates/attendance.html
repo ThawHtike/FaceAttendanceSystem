@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance History</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            margin-bottom: 30px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 0 15px;
+        }
+
+        a:hover {
+            color: #45a049;
+        }
+
+        table {
+            margin: 0 auto; /* Centers the table */
+            width: 80%;
+            max-width: 800px;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden; /* Rounds the corners of the header */
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9; /* Light highlight on hover */
+        }
+
+        /* Handle empty rows nicely */
+        td {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Attendance History</h2>
+
+    <div class="nav-links">
+        <a href="/">← Back to Home</a>
+        <span style="color: #ddd;">|</span>
+        <a href="/live_feed_page">Live Scanning →</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in tables %}
+            <tr>
+                <td>{{ row.student_id }}</td>
+                <td>{{ row.student_name }}</td>
+                <td>{{ row.date }}</td>
+                <td>{{ row.time }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

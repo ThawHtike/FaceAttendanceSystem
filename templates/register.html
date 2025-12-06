@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Student</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            text-align: center; /* Centers the heading and link */
+            margin-top: 50px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            /* Centers the form box itself */
+            margin: 0 auto;
+            width: 300px;
+
+            /* Card styling */
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            text-align: left; /* Keeps labels aligned to the left inside the box */
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't break width */
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Register New Student</h2>
+
+    <form action="/register" method="post" enctype="multipart/form-data">
+        <label>Student ID:</label>
+        <input type="text" name="student_id" placeholder="Enter ID" required>
+
+        <label>Student Name:</label>
+        <input type="text" name="student_name" placeholder="Enter Name" required>
+
+        <label>Upload Photo:</label>
+        <input type="file" name="photo" required>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <a href="/">← Back to Home</a>
+
+</body>
+</html>

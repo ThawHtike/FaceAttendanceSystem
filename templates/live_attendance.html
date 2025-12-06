@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Attendance</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .container {
+            /* Centers the video box */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .video-box {
+            border: 8px solid white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0,0,0,0.2);
+            overflow: hidden; /* Ensures corners stay rounded */
+            line-height: 0; /* Removes gap at bottom of image */
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .nav-links {
+            margin-bottom: 30px;
+            background-color: white;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        a {
+            text-decoration: none;
+            color: #4CAF50;
+            font-weight: bold;
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+        a:hover {
+            color: #45a049;
+        }
+
+        .info-text {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Live Attendance Scanning</h1>
+
+    <div class="nav-links">
+        <a href="/">← Back to Home</a>
+        <span style="color: #ddd;">|</span>
+        <a href="/attendance">View Full History →</a>
+    </div>
+
+    <div class="container">
+        <div class="video-box">
+            <img src="{{ url_for('video_feed') }}" width="640" height="480">
+        </div>
+
+        <p class="info-text">
+            <i>The attendance is saved automatically when a face is recognized.</i>
+        </p>
+    </div>
+
+</body>
+</html>
