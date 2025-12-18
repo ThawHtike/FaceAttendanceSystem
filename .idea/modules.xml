@@ -3,6 +3,14 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/FaceAttendanceSystem.iml" filepath="$PROJECT_DIR$/.idea/FaceAttendanceSystem.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../FaceMask/.idea/FaceMask.iml" filepath="$PROJECT_DIR$/../FaceMask/.idea/FaceMask.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../FaceSwap/.idea/FaceSwap.iml" filepath="$PROJECT_DIR$/../FaceSwap/.idea/FaceSwap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../HuggingFaceSentimentAnalysis/.idea/HuggingFaceSentimentAnalysis.iml" filepath="$PROJECT_DIR$/../HuggingFaceSentimentAnalysis/.idea/HuggingFaceSentimentAnalysis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../KLangInterpreter/.idea/KLangInterpreter.iml" filepath="$PROJECT_DIR$/../KLangInterpreter/.idea/KLangInterpreter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../NNandDL/.idea/NNandDL.iml" filepath="$PROJECT_DIR$/../NNandDL/.idea/NNandDL.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../QRCodeScanner/.idea/QRCodeScanner.iml" filepath="$PROJECT_DIR$/../QRCodeScanner/.idea/QRCodeScanner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../StudentManagementSystem/.idea/StudentManagementSystem.iml" filepath="$PROJECT_DIR$/../StudentManagementSystem/.idea/StudentManagementSystem.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../licenseplate1/.idea/licenseplate1.iml" filepath="$PROJECT_DIR$/../licenseplate1/.idea/licenseplate1.iml" />
     </modules>
   </component>
 </project>

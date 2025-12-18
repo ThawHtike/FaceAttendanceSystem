@@ -5,7 +5,14 @@
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/.venv1" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9 virtualenv at C:\Users\thawz\PycharmProjects\FaceAttendanceSystem\.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="FaceMask" />
+    <orderEntry type="module" module-name="FaceSwap" />
+    <orderEntry type="module" module-name="QRCodeScanner" />
+    <orderEntry type="module" module-name="StudentManagementSystem" />
+    <orderEntry type="module" module-name="licenseplate1" />
+    <orderEntry type="module" module-name="KLangInterpreter" />
+    <orderEntry type="module" module-name="HuggingFaceSentimentAnalysis" />
+    <orderEntry type="module" module-name="NNandDL" />
   </component>
 </module>
