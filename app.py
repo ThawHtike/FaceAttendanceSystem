@@ -3,12 +3,13 @@ import cv2
 import pandas as pd
 import os
 import numpy as np
+import base64
 from datetime import datetime, timedelta
 from PIL import Image, ImageOps
 import face_recognition
 
 # =====================================================
-# CONFIG
+# CONFIG & DIRECTORIES
 # =====================================================
 PHOTO_DIR = "static/photos"
 DB_FILE = "student_database.csv"
@@ -17,186 +18,243 @@ CLASS_DURATION_HOURS = 3
 
 os.makedirs(PHOTO_DIR, exist_ok=True)
 
-# =====================================================
-# INIT FILES
-# =====================================================
-if not os.path.exists(DB_FILE):
-    pd.DataFrame(
-        columns=["student_id", "student_name", "photo"]
-    ).to_csv(DB_FILE, index=False)
-
-if not os.path.exists(ATT_FILE):
-    pd.DataFrame(
-        columns=["student_id", "student_name", "date", "time"]
-    ).to_csv(ATT_FILE, index=False)
 
 # =====================================================
-# IMAGE LOADER
+# INITIALIZE DATABASE FILES
 # =====================================================
+def init_files():
+    if not os.path.exists(DB_FILE):
+        pd.DataFrame(columns=["student_id", "student_name", "photo"]).to_csv(DB_FILE, index=False)
+    if not os.path.exists(ATT_FILE):
+        pd.DataFrame(columns=["student_id", "student_name", "date", "time"]).to_csv(ATT_FILE, index=False)
+
+
+init_files()
+
+
+# =====================================================
+# HELPER FUNCTIONS
+# =====================================================
+def get_base64_image(image_path):
+    try:
+        if os.path.exists(image_path):
+            with open(image_path, "rb") as img_file:
+                return f"data:image/jpeg;base64,{base64.b64encode(img_file.read()).decode()}"
+        return None
+    except Exception:
+        return None
+
+
 def load_image(file_or_path):
-    if isinstance(file_or_path, str):
-        img = Image.open(file_or_path)
-    else:
-        file_or_path.seek(0)
-        img = Image.open(file_or_path)
-
+    img = Image.open(file_or_path)
     img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
     return np.array(img)
 
-# =====================================================
-# CHECK 3-HOUR RULE
-# =====================================================
+
+def get_known_faces():
+    if not os.path.exists(DB_FILE): return [], []
+    df_db = pd.read_csv(DB_FILE)
+    known_encodings, known_metadata = [], []
+    for _, row in df_db.iterrows():
+        path = os.path.join(PHOTO_DIR, row["photo"])
+        if os.path.exists(path):
+            img = face_recognition.load_image_file(path)
+            encs = face_recognition.face_encodings(img)
+            if encs:
+                known_encodings.append(encs[0])
+                known_metadata.append({"id": row["student_id"], "name": row["student_name"]})
+    return known_encodings, known_metadata
+
+
 def already_marked_this_class(student_id):
     df = pd.read_csv(ATT_FILE)
+    # Ensure ID is compared as string
     records = df[df["student_id"].astype(str) == str(student_id)]
+    if records.empty: return False
 
-    if records.empty:
-        return False
-
+    # Check the last record for this student
     last = records.iloc[-1]
-    last_time = datetime.strptime(
-        f"{last['date']} {last['time']}",
-        "%Y-%m-%d %H:%M:%S"
-    )
+    last_time = datetime.strptime(f"{last['date']} {last['time']}", "%Y-%m-%d %H:%M:%S")
 
-    return datetime.now() - last_time < timedelta(hours=CLASS_DURATION_HOURS)
+    # If time elapsed is less than 3 hours, return True (already marked)
+    return (datetime.now() - last_time) < timedelta(hours=CLASS_DURATION_HOURS)
 
-# =====================================================
-# SAVE ATTENDANCE
-# =====================================================
+
 def save_attendance(student_id, student_name):
     now = datetime.now()
-    pd.DataFrame([{
-        "student_id": student_id,
-        "student_name": student_name,
-        "date": now.strftime("%Y-%m-%d"),
-        "time": now.strftime("%H:%M:%S")
-    }]).to_csv(ATT_FILE, mode="a", header=False, index=False)
+    new_entry = pd.DataFrame([{"student_id": student_id, "student_name": student_name,
+                               "date": now.strftime("%Y-%m-%d"), "time": now.strftime("%H:%M:%S")}])
+    new_entry.to_csv(ATT_FILE, mode="a", header=False, index=False)
+
 
 # =====================================================
-# UI
+# UI - PAGE CONFIG & STYLING
 # =====================================================
-st.set_page_config(page_title="Face Attendance", page_icon="📷")
-st.title("📷 Face Attendance System (Photo Matching)")
+st.set_page_config(page_title="Face Attendance System", page_icon="📷", layout="wide")
 
+st.markdown("""
+    <style>
+    [data-testid="stDataFrame"] { margin: 0 auto; display: flex; justify-content: center; }
+    th { text-align: center !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# =====================================================
+# SIDEBAR
+# =====================================================
+if os.path.exists("logo.png"):
+    st.sidebar.image("logo.png", width="stretch")
+
+st.sidebar.title("Beykoz University")
 menu = ["Register Student", "Live Attendance", "View Records"]
-choice = st.sidebar.selectbox("Menu", menu)
+# 2026 FIX: Added non-empty label "Navigation"
+choice = st.sidebar.selectbox("Navigation", menu, label_visibility="collapsed")
+st.sidebar.write("---")
+
+if os.path.exists(ATT_FILE):
+    df_download = pd.read_csv(ATT_FILE)
+    st.sidebar.download_button(
+        label="📥 Download Attendance Record",
+        data=df_download.to_csv(index=False).encode('utf-8'),
+        file_name=f"Attendance_Report_{datetime.now().strftime('%Y%m%d')}.csv",
+        mime="text/csv",
+        width="stretch"
+    )
+
+st.sidebar.markdown(f"""
+<div style="font-size:12px; line-height:1.5; color: #555; margin-top: 20px;">
+    <strong>MASTER’S TERM PROJECT</strong><br>
+    <strong>COMPUTER ENGINEERING DEPARTMENT</strong><br><br>
+    <strong>Student:</strong> Thaw Zin Htike<br>
+    <strong>ID:</strong> 2430210021<br><br>
+    <strong>MASTER’S PROJECT ADVISOR</strong><br>
+    <strong>Prof. Oruç Raif Önvural</strong>
+</div>
+""", unsafe_allow_html=True)
 
 # =====================================================
-# REGISTER STUDENT
+# MAIN CONTENT
 # =====================================================
+
 if choice == "Register Student":
-    st.header("Register Student")
-
-    with st.form("register"):
-        sid = st.text_input("Student ID")
-        name = st.text_input("Student Name")
-        file = st.file_uploader("Upload Face Photo", type=["jpg", "jpeg", "png"])
-        submit = st.form_submit_button("Register")
+    st.header("👤 Student Registration")
+    with st.form("reg_form", clear_on_submit=True):
+        sid = st.text_input("Student ID (Unique)")
+        name = st.text_input("Full Name")
+        file = st.file_uploader("Upload Clear Face Photo", type=["jpg", "jpeg", "png"])
+        submit = st.form_submit_button("Register Student")
 
     if submit:
         if not sid or not name or not file:
-            st.warning("Fill all fields")
+            st.error("Please fill all fields and upload a photo.")
         else:
-            img = load_image(file)
-            encodings = face_recognition.face_encodings(img)
-
-            if not encodings:
-                st.error("❌ No face detected")
+            # 1. Check Duplicate ID
+            df_db = pd.read_csv(DB_FILE)
+            if str(sid) in df_db["student_id"].astype(str).values:
+                st.error(f"❌ Error: Student ID '{sid}' is already registered!")
             else:
-                df = pd.read_csv(DB_FILE)
+                img = load_image(file)
+                encodings = face_recognition.face_encodings(img)
 
-                if sid in df["student_id"].astype(str).values:
-                    st.error("Student already exists")
+                if not encodings:
+                    st.error("❌ No face detected. Please use a clearer photo.")
                 else:
-                    filename = f"{sid}_{name}.jpg"
-                    path = os.path.join(PHOTO_DIR, filename)
-                    Image.fromarray(img).save(path)
+                    new_encoding = encodings[0]
+                    # 2. Check Duplicate Face
+                    known_encs, known_meta = get_known_faces()
+                    is_duplicate_face = False
 
-                    df.loc[len(df)] = [sid, name, filename]
-                    df.to_csv(DB_FILE, index=False)
+                    if known_encs:
+                        matches = face_recognition.compare_faces(known_encs, new_encoding, tolerance=0.5)
+                        if True in matches:
+                            idx = matches.index(True)
+                            st.error(
+                                f"❌ Registration Failed: This face is already registered as **{known_meta[idx]['name']}**.")
+                            is_duplicate_face = True
 
-                    st.success("✅ Student Registered")
-                    st.image(img)
+                    if not is_duplicate_face:
+                        filename = f"{sid}_{name.replace(' ', '_')}.jpg"
+                        path = os.path.join(PHOTO_DIR, filename)
+                        Image.fromarray(img).save(path)
 
-# =====================================================
-# LIVE ATTENDANCE (MULTI STUDENT, PHOTO MATCH)
-# =====================================================
+                        new_student = pd.DataFrame([[sid, name, filename]],
+                                                   columns=["student_id", "student_name", "photo"])
+                        new_student.to_csv(DB_FILE, mode='a', header=False, index=False)
+                        st.success(f"✅ Registered {name} successfully!")
+                        st.image(img, width=200)
+
 elif choice == "Live Attendance":
-    st.header("Live Attendance (One record per student / 3 hours)")
+    st.header("🎥 Live Recognition")
+    known_encodings, known_metadata = get_known_faces()
 
-    df_db = pd.read_csv(DB_FILE)
-    if df_db.empty:
-        st.warning("No registered students")
+    if not known_encodings:
+        st.warning("No students registered yet.")
     else:
-        if "camera_on" not in st.session_state:
-            st.session_state.camera_on = False
+        run_cam = st.checkbox("Start Camera")
+        status_placeholder = st.empty()
+        frame_placeholder = st.empty()
 
-        if st.button("▶ Start Camera"):
-            st.session_state.camera_on = True
+        if run_cam:
+            video_capture = cv2.VideoCapture(0)
+            # Use session state to avoid spamming the UI during the same camera run
+            session_marked = set()
 
-        if st.button("⏹ Stop Camera"):
-            st.session_state.camera_on = False
+            while run_cam:
+                ret, frame = video_capture.read()
+                if not ret: break
 
-        frame_box = st.image([])
-        status = st.empty()
+                # Resize for performance
+                rgb_small = cv2.cvtColor(cv2.resize(frame, (0, 0), fx=0.25, fy=0.25), cv2.COLOR_BGR2RGB)
+                face_locs = face_recognition.face_locations(rgb_small)
+                face_encs = face_recognition.face_encodings(rgb_small, face_locs)
 
-        # Preload known faces
-        known_encodings = []
-        known_ids = []
-        known_names = []
-
-        for _, row in df_db.iterrows():
-            img = load_image(os.path.join(PHOTO_DIR, row["photo"]))
-            enc = face_recognition.face_encodings(img)
-            if enc:
-                known_encodings.append(enc[0])
-                known_ids.append(row["student_id"])
-                known_names.append(row["student_name"])
-
-        if st.session_state.camera_on:
-            cam = cv2.VideoCapture(0)
-
-            while st.session_state.camera_on:
-                ret, frame = cam.read()
-                if not ret:
-                    break
-
-                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                face_locations = face_recognition.face_locations(rgb)
-                face_encs = face_recognition.face_encodings(rgb, face_locations)
-
-                for enc, loc in zip(face_encs, face_locations):
-                    matches = face_recognition.compare_faces(
-                        known_encodings, enc, tolerance=0.45
-                    )
+                for face_encoding in face_encs:
+                    matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.5)
 
                     if True in matches:
                         idx = matches.index(True)
-                        sid = known_ids[idx]
-                        name = known_names[idx]
+                        sid = known_metadata[idx]["id"]
+                        name = known_metadata[idx]["name"]
 
-                        if already_marked_this_class(sid):
-                            status.info(f"ℹ {name} already marked for this class")
-                        else:
-                            save_attendance(sid, name)
-                            status.success(f"✅ Attendance saved: {name}")
+                        if sid not in session_marked:
+                            if not already_marked_this_class(sid):
+                                save_attendance(sid, name)
+                                session_marked.add(sid)
+                                status_placeholder.markdown(
+                                    f"<h3 style='color: #28a745; text-align: center;'>✅ Attendance Marked: {name}</h3>",
+                                    unsafe_allow_html=True)
+                            else:
+                                session_marked.add(sid)
+                                # UPDATED ERROR MESSAGE
+                                status_placeholder.markdown(
+                                    f"<h3 style='color: #ff9800; text-align: center;'>⚠️ {name} already took attendance for this class.</h3>",
+                                    unsafe_allow_html=True)
 
-                        top, right, bottom, left = loc
-                        cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-                        cv2.putText(
-                            frame, name, (left, top - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2
-                        )
+                frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), width="stretch")
+            video_capture.release()
 
-                frame_box.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
-            cam.release()
-
-# =====================================================
-# VIEW RECORDS
-# =====================================================
 elif choice == "View Records":
-    st.header("Attendance Records")
-    st.dataframe(pd.read_csv(ATT_FILE))
+    st.header("📊 Data Records")
+    tab1, tab2 = st.tabs(["Attendance Logs", "Student Database"])
+
+    with tab1:
+        if os.path.exists(ATT_FILE):
+            att_df = pd.read_csv(ATT_FILE).sort_values(by=["date", "time"], ascending=False)
+            if not att_df.empty:
+                att_df.insert(0, "S.No", range(1, len(att_df) + 1))
+                st.dataframe(att_df, width="stretch", hide_index=True)
+            else:
+                st.info("No records found.")
+
+    with tab2:
+        if os.path.exists(DB_FILE):
+            db_df = pd.read_csv(DB_FILE)
+            if not db_df.empty:
+                db_df.insert(0, "S.No", range(1, len(db_df) + 1))
+                db_df["photo"] = db_df["photo"].apply(lambda x: get_base64_image(os.path.join(PHOTO_DIR, x)))
+                st.dataframe(
+                    db_df,
+                    column_config={"photo": st.column_config.ImageColumn("Student Photo", width="medium")},
+                    hide_index=True, width="stretch"
+                )
